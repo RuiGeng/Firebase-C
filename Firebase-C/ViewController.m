@@ -132,11 +132,6 @@
     //Save image to Firebase Storage
     [self uploadImagetoStorage:self.imageReferenceUrl];
     
-    [[_ref child: self.datetimeLabel.text] setValue:@{@"Location": @"Kitchener",
-                                                      @"Poster": self.posterTextView.text,
-                                                      @"ImageURL": @""}];
-    
-    [self cleanItems];
 }
 
 - (void)uploadImagetoStorage: (NSURL*) imageReferenceURL {
@@ -161,6 +156,7 @@
                                         }];
                                        // [END uploadimage]
                                    }];
+
         
     } else {
         //UIImage *image = info[UIImagePickerControllerOriginalImage];
@@ -180,7 +176,6 @@
                                         [self uploadSuccess:metadata storagePath:imagePath];
                                     }];
     }
-    
 }
 
 - (void)uploadSuccess:(FIRStorageMetadata *) metadata storagePath: (NSString *) storagePath {
@@ -188,6 +183,20 @@
     NSLog(@"image file path = %@", storagePath);
     [[NSUserDefaults standardUserDefaults] setObject:storagePath forKey:@"storagePath"];
     [[NSUserDefaults standardUserDefaults] synchronize];
+    
+    [[_ref child: self.datetimeLabel.text] setValue:@{@"Location": @"Kitchener",
+                                                      @"Poster": self.posterTextView.text,
+                                                      @"ImageURL": storagePath}];
+    
+    [self cleanItems];
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Infomation Message"
+                                                    message:@"The message was successfully sent."
+                                                   delegate:nil
+                                          cancelButtonTitle:@"OK"
+                                          otherButtonTitles:nil];
+    [alert show];
+    
 }
 
 - (void)cleanItems{
