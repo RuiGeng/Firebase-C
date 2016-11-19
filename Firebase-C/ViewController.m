@@ -16,6 +16,8 @@
 
 @property (strong, nonatomic) FIRStorageReference *storageRef;
 
+@property NSURL *imageReferenceUrl;
+
 @end
 
 @implementation ViewController
@@ -68,53 +70,18 @@
 // Select Operation
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
     
-    UIImage *chosenImage = info[UIImagePickerControllerEditedImage];
+    //UIImage *chosenImage = info[UIImagePickerControllerEditedImage];
     
-    self.photo.image = chosenImage;
+    //self.photo.image = chosenImage;
+    
+    //Save image Reference URL
+    self.imageReferenceUrl = info[UIImagePickerControllerReferenceURL];
+    
+    UIImage *image = info[UIImagePickerControllerOriginalImage];
+    
+    self.photo.image = image;
     
     [picker dismissViewControllerAnimated:YES completion:NULL];
-    
-    NSURL *referenceUrl = info[UIImagePickerControllerReferenceURL];
-    
-    if (referenceUrl) {
-        PHFetchResult* assets = [PHAsset fetchAssetsWithALAssetURLs:@[referenceUrl] options:nil];
-        PHAsset *asset = [assets firstObject];
-        [asset requestContentEditingInputWithOptions:nil
-                                   completionHandler:^(PHContentEditingInput *contentEditingInput,
-                                                       NSDictionary *info) {
-                                       NSURL *imageFile = contentEditingInput.fullSizeImageURL;
-                                       NSString *filePath = [NSString stringWithFormat:@"images/%@", [imageFile lastPathComponent]];
-                                       // [START uploadimage]
-                                       [[_storageRef child:filePath]
-                                        putFile:imageFile metadata:nil
-                                        completion:^(FIRStorageMetadata *metadata, NSError *error) {
-                                            if (error) {
-                                                NSLog(@"Error uploading: %@", error);
-                                                return;
-                                            }
-                                            [self uploadSuccess:metadata storagePath:filePath];
-                                        }];
-                                       // [END uploadimage]
-                                   }];
-        
-    } else {
-        UIImage *image = info[UIImagePickerControllerOriginalImage];
-        NSData *imageData = UIImageJPEGRepresentation(image, 0.8);
-        NSString *imagePath =
-        [NSString stringWithFormat:@"Images/%lld.jpg",
-         (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)];
-        FIRStorageMetadata *metadata = [FIRStorageMetadata new];
-        metadata.contentType = @"image/jpeg";
-        [[_storageRef child:imagePath] putData:imageData metadata:metadata
-                                    completion:^(FIRStorageMetadata * _Nullable metadata, NSError * _Nullable error) {
-                                        if (error) {
-                                            NSLog(@"Error uploading: %@", error);
-                                            return;
-                                        }
-                                        [self uploadSuccess:metadata storagePath:imagePath];
-                                    }];
-    }
-    
     
 }
 
@@ -162,23 +129,58 @@
 
 - (IBAction)postButton:(UIButton *)sender {
     
-    NSString *imageString;
-    
-    if(self.posterImageView.image != nil){
-        UIImage *uploadImage = self.posterImageView.image;
-        imageString = [self encodeToBase64String:uploadImage];
-    }else{
-        imageString = @"";
-    }
+    //Save image to Firebase Storage
+    [self uploadImagetoStorage:self.imageReferenceUrl];
     
     [[_ref child: self.datetimeLabel.text] setValue:@{@"Location": @"Kitchener",
                                                       @"Poster": self.posterTextView.text,
-                                                      @"Image": imageString}];
+                                                      @"ImageURL": @""}];
+    
+    [self cleanItems];
 }
 
-
-- (NSString *)encodeToBase64String:(UIImage *)image {
-    return [UIImagePNGRepresentation(image) base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+- (void)uploadImagetoStorage: (NSURL*) imageReferenceURL {
+    
+    if (imageReferenceURL) {
+        PHFetchResult* assets = [PHAsset fetchAssetsWithALAssetURLs:@[imageReferenceURL] options:nil];
+        PHAsset *asset = [assets firstObject];
+        [asset requestContentEditingInputWithOptions:nil
+                                   completionHandler:^(PHContentEditingInput *contentEditingInput,
+                                                       NSDictionary *info) {
+                                       NSURL *imageFile = contentEditingInput.fullSizeImageURL;
+                                       NSString *filePath = [NSString stringWithFormat:@"images/%@", [imageFile lastPathComponent]];
+                                       // [START uploadimage]
+                                       [[_storageRef child:filePath]
+                                        putFile:imageFile metadata:nil
+                                        completion:^(FIRStorageMetadata *metadata, NSError *error) {
+                                            if (error) {
+                                                NSLog(@"Error uploading: %@", error);
+                                                return;
+                                            }
+                                            [self uploadSuccess:metadata storagePath:filePath];
+                                        }];
+                                       // [END uploadimage]
+                                   }];
+        
+    } else {
+        //UIImage *image = info[UIImagePickerControllerOriginalImage];
+        UIImage *image = self.posterImageView.image;
+        NSData *imageData = UIImageJPEGRepresentation(image, 0.8);
+        NSString *imagePath =
+        [NSString stringWithFormat:@"Images/%lld.jpg",
+         (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)];
+        FIRStorageMetadata *metadata = [FIRStorageMetadata new];
+        metadata.contentType = @"image/jpeg";
+        [[_storageRef child:imagePath] putData:imageData metadata:metadata
+                                    completion:^(FIRStorageMetadata * _Nullable metadata, NSError * _Nullable error) {
+                                        if (error) {
+                                            NSLog(@"Error uploading: %@", error);
+                                            return;
+                                        }
+                                        [self uploadSuccess:metadata storagePath:imagePath];
+                                    }];
+    }
+    
 }
 
 - (void)uploadSuccess:(FIRStorageMetadata *) metadata storagePath: (NSString *) storagePath {
@@ -188,4 +190,10 @@
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
+- (void)cleanItems{
+    self.posterImageView.image = nil;
+    self.posterTextView.text = @"";
+    self.datetimeLabel.text = [self getDateString];
+    self.locationLabel.text = @"";
+}
 @end

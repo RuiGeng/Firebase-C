@@ -126,6 +126,7 @@
                     <connections>
                         <outlet property="datetimeLabel" destination="YtW-rC-uT5" id="CEc-ph-5Eo"/>
                         <outlet property="faceImageView" destination="LdI-uP-5k6" id="J30-qe-4jX"/>
+                        <outlet property="locationLabel" destination="gRU-0I-vzH" id="1pN-vL-gWF"/>
                         <outlet property="messageTextView" destination="SxO-Y8-Zwk" id="suA-DC-ncS"/>
                         <outlet property="photo" destination="Nbd-ML-8nv" id="iHh-He-KGN"/>
                         <outlet property="posterImageView" destination="Nbd-ML-8nv" id="Z2y-O8-ZVb"/>
