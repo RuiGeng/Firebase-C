@@ -156,7 +156,7 @@
                                         }];
                                        // [END uploadimage]
                                    }];
-
+        
         
     } else {
         //UIImage *image = info[UIImagePickerControllerOriginalImage];
@@ -184,9 +184,10 @@
     [[NSUserDefaults standardUserDefaults] setObject:storagePath forKey:@"storagePath"];
     [[NSUserDefaults standardUserDefaults] synchronize];
     
-    [[_ref child: self.datetimeLabel.text] setValue:@{@"Location": @"Kitchener",
-                                                      @"Poster": self.posterTextView.text,
-                                                      @"ImageURL": storagePath}];
+    [[_ref child: @"Rui/Post"] setValue:@{@"PostTime": self.datetimeLabel.text,
+                                     @"Location": @"Kitchener",
+                                     @"Poster": self.posterTextView.text,
+                                     @"ImageURL": storagePath}];
     
     [self cleanItems];
     
