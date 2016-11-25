@@ -26,6 +26,36 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+    //Initialize locationManger object
+    CLLocationManager *locationManager=[[CLLocationManager alloc]init];
+    self.locationManager = locationManager;
+    
+    
+    //CLLocationManager is not enabled
+    if (![CLLocationManager locationServicesEnabled]) {
+        NSLog(@"The location service is not already open on the device");
+    }
+    
+    //if current device is newer then 8.0
+    if ([UIDevice currentDevice].systemVersion.floatValue >=8.0) {
+        //Ask always Authorization
+        [locationManager requestAlwaysAuthorization];
+        //Ask Authorization only when applibation be used
+        [locationManager requestWhenInUseAuthorization];
+    }
+    
+    //set delegate is locationManager itself
+    locationManager.delegate=self;
+    //set accuracy
+    locationManager.desiredAccuracy=kCLLocationAccuracyBest;
+    
+    //set relocation distance
+    CLLocationDistance distance=10;
+    locationManager.distanceFilter=distance;
+    
+    //start location manager
+    [locationManager startUpdatingLocation];
+    
     //initial UI style
     [self setUITextViewStyle];
     [self setUIImageViewStyle];
@@ -185,9 +215,9 @@
     [[NSUserDefaults standardUserDefaults] synchronize];
     
     [[_ref child: @"Rui/Post"] setValue:@{@"PostTime": self.datetimeLabel.text,
-                                     @"Location": @"Kitchener",
-                                     @"Poster": self.posterTextView.text,
-                                     @"ImageURL": storagePath}];
+                                          @"Location": self.locationLabel.text,
+                                          @"Poster": self.posterTextView.text,
+                                          @"ImageURL": storagePath}];
     
     [self cleanItems];
     
@@ -204,6 +234,45 @@
     self.posterImageView.image = nil;
     self.posterTextView.text = @"";
     self.datetimeLabel.text = [self getDateString];
-    self.locationLabel.text = @"";
+    self.locationLabel.text = @"Location: ";
 }
+
+- (IBAction)locationButton:(id)sender {
+    
+    [self AntiEncoder: self.locationManager.location.coordinate];
+}
+
+
+// Converting Coordinates into Place Names
+- (void)AntiEncoder: (CLLocationCoordinate2D)currentLocation {
+    
+    //Create geocoder object
+    CLGeocoder *geocoder=[[CLGeocoder alloc]init];
+    
+    //Create Location
+    CLLocation *location=[[CLLocation alloc]initWithLatitude:currentLocation.latitude longitude:currentLocation.longitude];
+    
+    __block NSString *addressString = nil;
+    
+    //reverse Geocode Location
+    [geocoder reverseGeocodeLocation:location completionHandler:^(NSArray<CLPlacemark *> * _Nullable placemarks, NSError * _Nullable error) {
+        
+        if (error !=nil || placemarks.count == 0) {
+            NSLog(@"%@",error);
+            return ;
+        }
+        
+        for (CLPlacemark *placemark in placemarks) {
+            //address
+            //self.addressLabel.text = [NSString stringWithFormat:@"Address: %@", placemark.name];
+
+            //use addressDictionary
+            NSArray *lines = placemark.addressDictionary[ @"FormattedAddressLines"];
+            addressString = [lines componentsJoinedByString:@" "];
+            NSLog(@"Address: %@", addressString);
+            self.locationLabel.text = addressString;
+        }
+    }];
+}
+
 @end
