@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<title>Assignment 3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+<link rel="stylesheet" href="http://www.w3schools.com/lib/w3-theme-indigo.css">
+<body>
+
+<div class="w3-container w3-theme w3-center">
+  <h1>Assignment 3</h1>
+</div>
+
+<div class="w3-row">
+	<div class="w3-col m4 w3-theme-l5 w3-center">
+			<h3>User Name: </h3>
+			<p id="name"></p>
+	</div>
+	<div class="w3-col m4 w3-theme-l5 w3-center">
+			<h3>Post Time: </h3>
+			<p id="post-time"></p>
+	</div>
+	<div class="w3-col m4 w3-theme-l5 w3-center">
+			<h3>Location: </h3>
+			<p id="location"></p>
+	</div>
+
+	<div class="w3-container w3-theme-l4 w3-center">
+		<h3 >Message: </h3>
+		<p id="poster"></p>
+	</div>
+
+	<div class="w3-container w3-theme-l5 w3-center">
+		<h3>Image: </h3>
+		<img id="image" src="" style="width:100%" class="w3-border w3-padding" alt="image">
+	</div>
+</div>
+
+
+
+<div class="w3-container w3-theme w3-center">
+  <p>&copy; Copyright Rui Geng, 7128218</p>
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-storage.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyAwOz4LikHNvkX4j9uqf_5sEU224w03c1g",
+    authDomain: "assignment3-49d31.firebaseapp.com",
+    databaseURL: "https://assignment3-49d31.firebaseio.com",
+    storageBucket: "assignment3-49d31.appspot.com",
+    messagingSenderId: "792385512403"
+  };
+  firebase.initializeApp(config);
+  // Get a reference to the database service
+  var database = firebase.database();
+
+(function readFireDatabase() {
+  // [START single_value_read]
+
+  firebase.database().ref('/Rui/' + 'Post').once('value').then(function(snapshot) {
+    var postTime = snapshot.val().PostTime;
+    var location = snapshot.val().Location;
+    var poster = snapshot.val().Poster;
+    var imageUrl = snapshot.val().ImageURL;
+    document.getElementById('name').innerHTML = 'Rui';
+    document.getElementById('post-time').innerHTML = postTime;
+    document.getElementById('location').innerHTML = location;
+    document.getElementById('poster').innerHTML = poster;
+    var storageRef = firebase.storage().ref(imageUrl);
+    var url = storageRef.getDownloadURL().then(function(url) {
+    	    document.getElementById("image").src = url;
+    })
+  });
+
+})();
+</script>
+
+</body>
+</html>
